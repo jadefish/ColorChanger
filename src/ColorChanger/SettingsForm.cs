@@ -88,13 +88,15 @@ namespace ColorChanger
 
 		private async void timer_Tick(object sender, EventArgs e)
 		{
-			if (!this.changingColors)
-			{
-				changingColors = true;
-				int newIndex = ++this.settings.CurrentColorIndex % this.settings.Colors.Count;
-				await this.SetWindowColor(this.settings.Colors[newIndex]);
-				changingColors = false;
-			}
+            if (this.settings.Colors.Count < 1 || this.changingColors)
+            {
+                return;
+            }
+
+			changingColors = true;
+			int newIndex = ++this.settings.CurrentColorIndex % this.settings.Colors.Count;
+			await this.SetWindowColor(this.settings.Colors[newIndex]);
+			changingColors = false;
 		}
 
 		private void SettingsForm_Load(object sender, EventArgs e)
@@ -448,6 +450,7 @@ namespace ColorChanger
 					}
 
 					NativeMethods.SetWindowColor(Color.FromArgb(255, r, g, b));
+                    NativeMethods.SetAccentColor(Color.FromArgb(255, r, g, b));
 					float sleepDuration = (FADE_DURATION * 1000) / (maxDifference * CurrentFadeFactor);
 					await Task.Delay(TimeSpan.FromMilliseconds(sleepDuration));
 				}
@@ -455,6 +458,7 @@ namespace ColorChanger
 			else
 			{
 				NativeMethods.SetWindowColor(newColor);
+                NativeMethods.SetAccentColor(newColor);
 			}
 
 			this.settings.CurrentColorIndex = this.settings.Colors.IndexOf(newColor);
@@ -600,14 +604,16 @@ namespace ColorChanger
 
 		private async void menuItem_nextColor_Click(object sender, EventArgs e)
 		{
-			if (!this.changingColors)
-			{
-				changingColors = true;
-				int newIndex = ++this.settings.CurrentColorIndex % this.settings.Colors.Count;
-				this.settings.CurrentColorIndex = newIndex;
-				await this.SetWindowColor(this.settings.Colors[newIndex]);
-				changingColors = false;
-			}
-		}
+            if (this.settings.Colors.Count < 1 || this.changingColors)
+            {
+                return;
+            }
+
+            changingColors = true;
+            int newIndex = ++this.settings.CurrentColorIndex % this.settings.Colors.Count;
+            this.settings.CurrentColorIndex = newIndex;
+            await this.SetWindowColor(this.settings.Colors[newIndex]);
+            changingColors = false;
+        }
 	}
 }

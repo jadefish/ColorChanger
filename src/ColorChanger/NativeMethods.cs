@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
 using System.Runtime.InteropServices;
@@ -226,7 +227,22 @@ namespace ColorChanger
 			public byte[] rgbReserved;
 		}
 
-		[DllImport("user32.dll")]
+        [StructLayout(LayoutKind.Sequential)]
+        public struct COLORREF
+        {
+            public byte R;
+            public byte G;
+            public byte B;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct IMMERSIVE_COLOR_PREFERENCE
+        {
+            public COLORREF color1;
+            public COLORREF color2;
+        }
+
+        [DllImport("user32.dll")]
 		[return: MarshalAs(UnmanagedType.Bool)]
 		public static extern bool ShowWindow(IntPtr hWnd, ShowWindowCommands nCmdShow);
 
@@ -279,12 +295,18 @@ namespace ColorChanger
 		[DllImport("uxtheme.dll", ExactSpelling = true, CharSet = CharSet.Unicode)]
 		public static extern int SetWindowTheme(IntPtr hWnd, String pszSubAppName, String pszSubIdList);
 
-		/// <summary>
-		/// Converts .NET Color structure to a Win32 BGRA color.
-		/// </summary>
-		/// <param name="color">The Color structure to convert to BGRA format.</param>
-		/// <returns>A BGRA-format color representing the specified .NET Color.</returns>
-		private static uint ColorToBgra(Color color)
+        [DllImport("uxtheme.dll", ExactSpelling = true, CharSet = CharSet.Unicode)]
+        public static extern int GetUserColorPreference(ref IMMERSIVE_COLOR_PREFERENCE pcpPrference, bool fForceReload);
+
+        [DllImport("uxtheme.dll", EntryPoint = "#122", ExactSpelling = true, CharSet = CharSet.Unicode)]
+        public static extern int SetUserColorPreference(ref IMMERSIVE_COLOR_PREFERENCE pcpPrference, bool fForceCommit);
+
+        /// <summary>
+        /// Converts .NET Color structure to a Win32 BGRA color.
+        /// </summary>
+        /// <param name="color">The Color structure to convert to BGRA format.</param>
+        /// <returns>A BGRA-format color representing the specified .NET Color.</returns>
+        private static uint ColorToBgra(Color color)
 		{
 			return (uint)(color.B | (color.G << 8) | (color.R << 16) | (color.A << 24));
 		}
@@ -298,6 +320,21 @@ namespace ColorChanger
 		{
 			return Color.FromArgb(Int32.Parse(color.ToString("X"), NumberStyles.HexNumber));
 		}
+   
+        private static Color ColorRefToColor(COLORREF color)
+        {
+            return Color.FromArgb(color.R, color.G, color.B);
+        }
+
+        private static COLORREF ColorToColorRef(Color color)
+        {
+            return new COLORREF()
+            {
+                R = color.R,
+                G = color.G,
+                B = color.B
+            };
+        }
 
 		public static void SetWindowColor(Color color)
 		{
@@ -323,6 +360,26 @@ namespace ColorChanger
 			DWM_COLORIZATION_PARAMS dwmParams = new DWM_COLORIZATION_PARAMS();
 			DwmGetColorizationParameters(out dwmParams);
 			return BgraToColor(dwmParams.clrColor);
-		}
+        }
+
+        public static void SetAccentColor(Color color)
+        {
+            COLORREF color1 = ColorToColorRef(color);
+            IMMERSIVE_COLOR_PREFERENCE pref = new IMMERSIVE_COLOR_PREFERENCE()
+            {
+                color1 = color1,
+                color2 = color1
+            };
+
+            int result = SetUserColorPreference(ref pref, true);
+        }
+
+        public static Color GetAccentColor()
+        {
+            IMMERSIVE_COLOR_PREFERENCE pref = new IMMERSIVE_COLOR_PREFERENCE();
+            int result = GetUserColorPreference(ref pref, true);
+
+            return ColorRefToColor(pref.color1);
+        }
 	}
 }
