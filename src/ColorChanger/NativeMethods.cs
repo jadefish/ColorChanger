@@ -34,6 +34,7 @@ namespace ColorChanger
 			public long cx;
 			public long cy;
 		}
+
 		internal struct BUTTON_SPLITINFO
 		{
 			public uint mask;
@@ -41,6 +42,7 @@ namespace ColorChanger
 			public uint uSplitStyle;
 			public SIZE size;
 		}
+
 		private struct DWM_COLORIZATION_PARAMS
 		{
 			public uint clrColor;
@@ -51,7 +53,9 @@ namespace ColorChanger
 			public uint clrGlassReflectionIntensity;
 			public bool fOpaque;
 		}
-		[StructLayout(LayoutKind.Sequential)] public struct RECT
+
+		[StructLayout(LayoutKind.Sequential)]
+		public struct RECT
 		{
 			public int Left, Top, Right, Bottom;
 
@@ -145,6 +149,7 @@ namespace ColorChanger
 				return string.Format(System.Globalization.CultureInfo.CurrentCulture, "{{Left={0},Top={1},Right={2},Bottom={3}}}", Left, Top, Right, Bottom);
 			}
 		}
+
 		public enum ShowWindowCommands
 		{
 			/// <summary>
@@ -168,7 +173,7 @@ namespace ColorChanger
 			Maximize = 3, // is this the right value?
 			/// <summary>
 			/// Activates the window and displays it as a maximized window.
-			/// </summary>       
+			/// </summary>
 			ShowMaximized = 3,
 			/// <summary>
 			/// Displays a window in its most recent size and position. This value 
@@ -216,7 +221,9 @@ namespace ColorChanger
 			/// </summary>
 			ForceMinimize = 11
 		}
-		[StructLayout(LayoutKind.Sequential)] public struct PAINTSTRUCT
+
+		[StructLayout(LayoutKind.Sequential)]
+		public struct PAINTSTRUCT
 		{
 			public IntPtr hdc;
 			public bool fErase;
@@ -227,22 +234,22 @@ namespace ColorChanger
 			public byte[] rgbReserved;
 		}
 
-        [StructLayout(LayoutKind.Sequential)]
-        public struct COLORREF
-        {
-            public byte R;
-            public byte G;
-            public byte B;
-        }
+		[StructLayout(LayoutKind.Sequential)]
+		public struct COLORREF
+		{
+			public byte R;
+			public byte G;
+			public byte B;
+		}
 
-        [StructLayout(LayoutKind.Sequential)]
-        public struct IMMERSIVE_COLOR_PREFERENCE
-        {
-            public COLORREF color1;
-            public COLORREF color2;
-        }
+		[StructLayout(LayoutKind.Sequential)]
+		public struct IMMERSIVE_COLOR_PREFERENCE
+		{
+			public COLORREF color1;
+			public COLORREF color2;
+		}
 
-        [DllImport("user32.dll")]
+		[DllImport("user32.dll")]
 		[return: MarshalAs(UnmanagedType.Bool)]
 		public static extern bool ShowWindow(IntPtr hWnd, ShowWindowCommands nCmdShow);
 
@@ -266,7 +273,7 @@ namespace ColorChanger
 		[DllImport("user32")]
 		public static extern int RegisterWindowMessage(string message);
 
-		[DllImport("uxtheme.dll", ExactSpelling = true, CharSet = CharSet.Unicode)]
+		[DllImport("uxtheme", ExactSpelling = true, CharSet = CharSet.Unicode)]
 		public static extern IntPtr OpenThemeData(IntPtr hWnd, String classList);
 
 		[DllImport("uxtheme", ExactSpelling = true)]
@@ -283,30 +290,30 @@ namespace ColorChanger
 		[DllImport("uxtheme", ExactSpelling = true)]
 		public static extern int DrawThemeParentBackground(IntPtr hWnd, IntPtr hdc, int pRect);
 
-		[DllImport("uxtheme.dll", ExactSpelling = true)]
+		[DllImport("uxtheme", ExactSpelling = true)]
 		public static extern int CloseThemeData(IntPtr hTheme);
 
-		[DllImport("user32.dll")]
+		[DllImport("user32")]
 		public static extern IntPtr BeginPaint(IntPtr hwnd, out PAINTSTRUCT lpPaint);
 
-		[DllImport("user32.dll")]
+		[DllImport("user32")]
 		public static extern bool EndPaint(IntPtr hWnd, [In] ref PAINTSTRUCT lpPaint);
 
-		[DllImport("uxtheme.dll", ExactSpelling = true, CharSet = CharSet.Unicode)]
+		[DllImport("uxtheme", ExactSpelling = true, CharSet = CharSet.Unicode)]
 		public static extern int SetWindowTheme(IntPtr hWnd, String pszSubAppName, String pszSubIdList);
 
-        [DllImport("uxtheme.dll", ExactSpelling = true, CharSet = CharSet.Unicode)]
-        public static extern int GetUserColorPreference(ref IMMERSIVE_COLOR_PREFERENCE pcpPrference, bool fForceReload);
+		[DllImport("uxtheme", ExactSpelling = true, CharSet = CharSet.Unicode)]
+		public static extern int GetUserColorPreference(ref IMMERSIVE_COLOR_PREFERENCE preference, bool force);
 
-        [DllImport("uxtheme.dll", EntryPoint = "#122", ExactSpelling = true, CharSet = CharSet.Unicode)]
-        public static extern int SetUserColorPreference(ref IMMERSIVE_COLOR_PREFERENCE pcpPrference, bool fForceCommit);
+		[DllImport("uxtheme", EntryPoint = "#122", ExactSpelling = true, CharSet = CharSet.Unicode)]
+		public static extern int SetUserColorPreference(ref IMMERSIVE_COLOR_PREFERENCE preference, bool force);
 
-        /// <summary>
-        /// Converts .NET Color structure to a Win32 BGRA color.
-        /// </summary>
-        /// <param name="color">The Color structure to convert to BGRA format.</param>
-        /// <returns>A BGRA-format color representing the specified .NET Color.</returns>
-        private static uint ColorToBgra(Color color)
+		/// <summary>
+		/// Converts .NET Color structure to a Win32 BGRA color.
+		/// </summary>
+		/// <param name="color">The Color structure to convert to BGRA format.</param>
+		/// <returns>A BGRA-format color representing the specified .NET Color.</returns>
+		private static uint ColorToBgra(Color color)
 		{
 			return (uint)(color.B | (color.G << 8) | (color.R << 16) | (color.A << 24));
 		}
@@ -321,20 +328,20 @@ namespace ColorChanger
 			return Color.FromArgb(Int32.Parse(color.ToString("X"), NumberStyles.HexNumber));
 		}
    
-        private static Color ColorRefToColor(COLORREF color)
-        {
-            return Color.FromArgb(color.R, color.G, color.B);
-        }
+		private static Color ColorRefToColor(COLORREF color)
+		{
+			return Color.FromArgb(color.R, color.G, color.B);
+		}
 
-        private static COLORREF ColorToColorRef(Color color)
-        {
-            return new COLORREF()
-            {
-                R = color.R,
-                G = color.G,
-                B = color.B
-            };
-        }
+		private static COLORREF ColorToColorRef(Color color)
+		{
+			return new COLORREF()
+			{
+				R = color.R,
+				G = color.G,
+				B = color.B
+			};
+		}
 
 		public static void SetWindowColor(Color color)
 		{
@@ -360,26 +367,26 @@ namespace ColorChanger
 			DWM_COLORIZATION_PARAMS dwmParams = new DWM_COLORIZATION_PARAMS();
 			DwmGetColorizationParameters(out dwmParams);
 			return BgraToColor(dwmParams.clrColor);
-        }
+		}
 
-        public static void SetAccentColor(Color color)
-        {
-            COLORREF color1 = ColorToColorRef(color);
-            IMMERSIVE_COLOR_PREFERENCE pref = new IMMERSIVE_COLOR_PREFERENCE()
-            {
-                color1 = color1,
-                color2 = color1
-            };
+		public static void SetAccentColor(Color color)
+		{
+			COLORREF color1 = ColorToColorRef(color);
+			IMMERSIVE_COLOR_PREFERENCE pref = new IMMERSIVE_COLOR_PREFERENCE()
+			{
+				color1 = color1,
+				color2 = color1
+			};
 
-            int result = SetUserColorPreference(ref pref, true);
-        }
+			int result = SetUserColorPreference(ref pref, true);
+		}
 
-        public static Color GetAccentColor()
-        {
-            IMMERSIVE_COLOR_PREFERENCE pref = new IMMERSIVE_COLOR_PREFERENCE();
-            int result = GetUserColorPreference(ref pref, true);
+		public static Color GetAccentColor()
+		{
+			IMMERSIVE_COLOR_PREFERENCE pref = new IMMERSIVE_COLOR_PREFERENCE();
+			int result = GetUserColorPreference(ref pref, true);
 
-            return ColorRefToColor(pref.color1);
-        }
+			return ColorRefToColor(pref.color1);
+		}
 	}
 }
